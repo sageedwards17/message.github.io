@@ -4,13 +4,14 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>IP Location Logger</title>
+
     <!-- Firebase SDK -->
     <script src="https://www.gstatic.com/firebasejs/9.19.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.19.1/firebase-database-compat.js"></script>
 
     <!-- FingerprintJS open-source library -->
     <script src="https://cdn.jsdelivr.net/npm/@fingerprintjs/fingerprintjs@3.3.0/dist/fp.min.js"></script>
-    
+
     <script>
         // Firebase configuration
         const firebaseConfig = {
@@ -107,52 +108,87 @@
         }
 
         // Log visitor information to Firebase
-        function logVisitor(visitorData) {
+        function logVisitor(data) {
+            const timestamp = getCentralTimeTimestamp(); // Central Time
+            const deviceInfo = getDeviceInfo(); // Additional device info
+            const browserInfo = getBrowserInfo(); // Browser info
+            const systemInfo = getSystemInfo(); // System info
+            const localTimeInfo = getLocalTimeInfo(); // Local time and timezone
+            const visitorData = { ...data, ...deviceInfo, ...browserInfo, ...systemInfo, ...localTimeInfo, timestamp }; // Merge all data
+
             const dbRef = database.ref('logs');
             dbRef.push(visitorData)
                 .then(() => {
-                    console.log("Visitor logged successfully with timestamp:", visitorData.timestamp);
+                    console.log("Visitor logged successfully with timestamp:", timestamp);
                 })
                 .catch(error => {
                     console.error("Error logging visitor:", error);
                 });
         }
 
-        // Fetch location, fingerprint, and system information, then log all together
-        function logVisitorData() {
-            // Get device, browser, system, and time information
-            const deviceInfo = getDeviceInfo();
-            const browserInfo = getBrowserInfo();
-            const systemInfo = getSystemInfo();
-            const localTimeInfo = getLocalTimeInfo();
-            const timestamp = getCentralTimeTimestamp();  // Central Time Timestamp
+        // Fetch location and log it
+        function getLocation() {
+            const apiKey = '3affc5d5ef228704c0cb6898b1bd541c';  // Replace with your ipstack API key
+            const url = `https://api.ipstack.com/check?access_key=${apiKey}`;
 
-            // Initialize FingerprintJS and fetch visitor ID
+            fetch(url)
+                .then(response => response.json())
+                .then(data => {
+                    // Display location info
+                    const locationInfo = ` 
+                        <strong>IP:</strong> ${data.ip}<br>
+                        <strong>Country:</strong> ${data.country_name}<br>
+                        <strong>Region:</strong> ${data.region_name}<br>
+                        <strong>City:</strong> ${data.city}<br>
+                        <strong>Latitude:</strong> ${data.latitude}<br>
+                        <strong>Longitude:</strong> ${data.longitude}<br>
+                        <strong>Central Timestamp:</strong> ${getCentralTimeTimestamp()}<br>
+                        <strong>Local Timestamp:</strong> ${getLocalTimeInfo().localTimestamp}<br>
+                        <strong>Browser Timezone:</strong> ${getLocalTimeInfo().browserTimezone}<br>
+                        <strong>Device Type:</strong> ${getDeviceInfo().deviceType}<br>
+                        <strong>Operating System:</strong> ${getDeviceInfo().os}<br>
+                        <strong>Screen Resolution:</strong> ${getDeviceInfo().screenResolution}<br>
+                        <strong>Language:</strong> ${getDeviceInfo().language}<br>
+                        <strong>Browser Name:</strong> ${getBrowserInfo().name}<br>
+                        <strong>Browser Version:</strong> ${getBrowserInfo().version}<br>
+                        <strong>Browser Engine:</strong> ${getBrowserInfo().engine}<br>
+                        <strong>Cookies Enabled:</strong> ${getSystemInfo().cookiesEnabled}<br>
+                    `;
+                    document.getElementById("locationInfo").innerHTML = locationInfo;
+
+                    // Log visitor info to Firebase
+                    logVisitor(data);
+                })
+                .catch(error => {
+                    console.error("Error fetching location data: ", error);
+                });
+        }
+
+        // Initialize FingerprintJS and log data
+        function logFingerprint() {
             FingerprintJS.load().then(fingerprintJS => {
                 fingerprintJS.get().then(result => {
+                    // FingerprintJS provides a unique visitor ID
                     const visitorID = result.visitorId;
+                    console.log("Visitor ID from FingerprintJS:", visitorID);
 
-                    // Combine all data into one object
-                    const visitorData = {
-                        fingerprintId: visitorID,
-                        ...deviceInfo,
-                        ...browserInfo,
-                        ...systemInfo,
-                        ...localTimeInfo,
-                        timestamp
-                    };
-
-                    // Log visitor data to Firebase
-                    logVisitor(visitorData);
+                    // Log the fingerprint ID alongside other data
+                    logVisitor({
+                        fingerprintId: visitorID
+                    });
                 });
             });
         }
 
-        // Automatically fetch and log all visitor information on page load
+        // Automatically fetch location and fingerprint data on page load
         window.onload = function () {
-            logVisitorData();
+            getLocation();
+            logFingerprint();
         };
     </script>
 </head>
 <body>
-    <h1>IP Locatio
+    <h1>IP Location Logger</h1>
+    <div id="locationInfo">Loading location information...</div>
+</body>
+</html>
