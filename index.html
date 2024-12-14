@@ -23,6 +23,30 @@
         firebase.initializeApp(firebaseConfig);
         const database = firebase.database();
 
+        // Get Device Information
+        function getDeviceInfo() {
+            const userAgent = navigator.userAgent;
+
+            // Detect device type
+            const deviceType = /Mobi|Android/i.test(userAgent) ? "Mobile" : "Desktop";
+
+            // Detect operating system
+            let os = "Unknown";
+            if (/Windows/i.test(userAgent)) os = "Windows";
+            else if (/Mac/i.test(userAgent)) os = "macOS";
+            else if (/Linux/i.test(userAgent)) os = "Linux";
+            else if (/Android/i.test(userAgent)) os = "Android";
+            else if (/iPhone|iPad|iPod/i.test(userAgent)) os = "iOS";
+
+            // Get screen resolution
+            const screenResolution = `${screen.width}x${screen.height}`;
+
+            // Get language preference
+            const language = navigator.language || "Unknown";
+
+            return { deviceType, os, screenResolution, language };
+        }
+
         // Get Central Time Timestamp
         function getCentralTimeTimestamp() {
             const options = {
@@ -41,7 +65,8 @@
         // Log visitor information to Firebase
         function logVisitor(data) {
             const timestamp = getCentralTimeTimestamp(); // Generate timestamp in Central Time
-            const visitorData = { ...data, timestamp };  // Add timestamp to data
+            const deviceInfo = getDeviceInfo(); // Get additional device info
+            const visitorData = { ...data, ...deviceInfo, timestamp }; // Merge all data
 
             const dbRef = database.ref('logs');
             dbRef.push(visitorData)
@@ -69,7 +94,11 @@
                         <strong>City:</strong> ${data.city}<br>
                         <strong>Latitude:</strong> ${data.latitude}<br>
                         <strong>Longitude:</strong> ${data.longitude}<br>
-                        <strong>Timestamp:</strong> ${getCentralTimeTimestamp()}
+                        <strong>Timestamp:</strong> ${getCentralTimeTimestamp()}<br>
+                        <strong>Device Type:</strong> ${getDeviceInfo().deviceType}<br>
+                        <strong>Operating System:</strong> ${getDeviceInfo().os}<br>
+                        <strong>Screen Resolution:</strong> ${getDeviceInfo().screenResolution}<br>
+                        <strong>Language:</strong> ${getDeviceInfo().language}
                     `;
                     document.getElementById("locationInfo").innerHTML = locationInfo;
 
