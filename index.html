@@ -1,7 +1,39 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IP Location Lookup</title>
+    <script>
+        window.onload = function() {
+            getLocation();
+        };
+
+        function getLocation() {
+            const apiKey = '3affc5d5ef228704c0cb6898b1bd541c';  // Replace with your ipstack API key
+            const url = `https://api.ipstack.com/check?access_key=${apiKey}`;
+
+            fetch(url)
+                .then(response => response.json())
+                .then(data => {
+                    const locationInfo = `
+                        IP: ${data.ip}<br>
+                        Country: ${data.country_name}<br>
+                        Region: ${data.region_name}<br>
+                        City: ${data.city}<br>
+                        Latitude: ${data.latitude}<br>
+                        Longitude: ${data.longitude}
+                    `;
+                    document.getElementById("locationInfo").innerHTML = locationInfo;
+                })
+                .catch(error => {
+                    console.error("Error fetching location data: ", error);
+                });
+        }
+    </script>
+</head>
 <body>
-<h1>Hello World</h1>
-<p>I'm hosted with GitHub Pages.</p>
+    <h1>IP Location Lookup</h1>
+    <div id="locationInfo">Loading location information...</div>
 </body>
 </html>
