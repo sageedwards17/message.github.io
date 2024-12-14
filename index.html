@@ -4,10 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>IP Location Logger</title>
-    <!-- Firebase SDK -->
+    <!-- Firebase Compatibility SDK -->
     <script src="https://www.gstatic.com/firebasejs/9.19.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.19.1/firebase-database-compat.js"></script>
-
     <script>
         // Firebase configuration
         const firebaseConfig = {
@@ -15,23 +14,43 @@
             authDomain: "infologger-194e5.firebaseapp.com",
             databaseURL: "https://infologger-194e5-default-rtdb.firebaseio.com",
             projectId: "infologger-194e5",
-            storageBucket: "infologger-194e5.firebasestorage.app",
+            storageBucket: "infologger-194e5.appspot.com",
             messagingSenderId: "641296174415",
             appId: "1:641296174415:web:a620c0bcabcc3467f0493a"
-};
+        };
 
         // Initialize Firebase
-        const app = firebase.initializeApp(firebaseConfig);
+        firebase.initializeApp(firebaseConfig);
         const database = firebase.database();
+
+        // Get Central Time Timestamp
+        function getCentralTimeTimestamp() {
+            const options = {
+                timeZone: "America/Chicago",
+                year: "numeric",
+                month: "2-digit",
+                day: "2-digit",
+                hour: "2-digit",
+                minute: "2-digit",
+                second: "2-digit"
+            };
+            const formatter = new Intl.DateTimeFormat("en-US", options);
+            return formatter.format(new Date());
+        }
 
         // Log visitor information to Firebase
         function logVisitor(data) {
-            const dbRef = firebase.database().ref('logs');
-            dbRef.push(data).then(() => {
-                console.log("Visitor logged successfully!");
-            }).catch(error => {
-                console.error("Error logging visitor:", error);
-            });
+            const timestamp = getCentralTimeTimestamp(); // Generate timestamp in Central Time
+            const visitorData = { ...data, timestamp };  // Add timestamp to data
+
+            const dbRef = database.ref('logs');
+            dbRef.push(visitorData)
+                .then(() => {
+                    console.log("Visitor logged successfully with timestamp:", timestamp);
+                })
+                .catch(error => {
+                    console.error("Error logging visitor:", error);
+                });
         }
 
         // Fetch location and log it
@@ -49,7 +68,8 @@
                         <strong>Region:</strong> ${data.region_name}<br>
                         <strong>City:</strong> ${data.city}<br>
                         <strong>Latitude:</strong> ${data.latitude}<br>
-                        <strong>Longitude:</strong> ${data.longitude}
+                        <strong>Longitude:</strong> ${data.longitude}<br>
+                        <strong>Timestamp:</strong> ${getCentralTimeTimestamp()}
                     `;
                     document.getElementById("locationInfo").innerHTML = locationInfo;
 
