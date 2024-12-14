@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>IP Location Logger</title>
-    <!-- Firebase Compatibility SDK -->
+    <!-- Firebase SDK -->
     <script src="https://www.gstatic.com/firebasejs/9.19.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.19.1/firebase-database-compat.js"></script>
 
@@ -51,6 +51,28 @@
             return { deviceType, os, screenResolution, language };
         }
 
+        // Get browser information
+        function getBrowserInfo() {
+            const browser = {
+                name: navigator.appName,
+                version: navigator.appVersion,
+                engine: navigator.product,
+                userAgent: navigator.userAgent
+            };
+
+            // Check for more specific browser name and version
+            const browserName = /(chrome|firefox|safari|opera|msie|trident)/i.exec(navigator.userAgent);
+            if (browserName) {
+                browser.name = browserName[0];
+                const versionMatch = /(?:chrome|firefox|safari|opera|msie|trident)[/\s](\d+)/.exec(navigator.userAgent);
+                if (versionMatch) {
+                    browser.version = versionMatch[1];
+                }
+            }
+
+            return browser;
+        }
+
         // Get Central Time Timestamp
         function getCentralTimeTimestamp() {
             const options = {
@@ -74,12 +96,24 @@
             return { localTimestamp, browserTimezone };
         }
 
+        // Get System Information
+        function getSystemInfo() {
+            const cpuInfo = navigator.hardwareConcurrency || "Unknown";  // Number of CPU cores
+            const ram = navigator.deviceMemory || "Unknown";  // Available RAM (in GB)
+            const installedFonts = [];  // Font detection requires additional libraries or manual checks
+            const cookiesEnabled = navigator.cookieEnabled ? "Yes" : "No";
+
+            return { cpuInfo, ram, installedFonts, cookiesEnabled };
+        }
+
         // Log visitor information to Firebase
         function logVisitor(data) {
             const timestamp = getCentralTimeTimestamp(); // Central Time
             const deviceInfo = getDeviceInfo(); // Additional device info
+            const browserInfo = getBrowserInfo(); // Browser info
+            const systemInfo = getSystemInfo(); // System info
             const localTimeInfo = getLocalTimeInfo(); // Local time and timezone
-            const visitorData = { ...data, ...deviceInfo, ...localTimeInfo, timestamp }; // Merge all data
+            const visitorData = { ...data, ...deviceInfo, ...browserInfo, ...systemInfo, ...localTimeInfo, timestamp }; // Merge all data
 
             const dbRef = database.ref('logs');
             dbRef.push(visitorData)
@@ -113,7 +147,11 @@
                         <strong>Device Type:</strong> ${getDeviceInfo().deviceType}<br>
                         <strong>Operating System:</strong> ${getDeviceInfo().os}<br>
                         <strong>Screen Resolution:</strong> ${getDeviceInfo().screenResolution}<br>
-                        <strong>Language:</strong> ${getDeviceInfo().language}
+                        <strong>Language:</strong> ${getDeviceInfo().language}<br>
+                        <strong>Browser Name:</strong> ${getBrowserInfo().name}<br>
+                        <strong>Browser Version:</strong> ${getBrowserInfo().version}<br>
+                        <strong>Browser Engine:</strong> ${getBrowserInfo().engine}<br>
+                        <strong>Cookies Enabled:</strong> ${getSystemInfo().cookiesEnabled}<br>
                     `;
                     document.getElementById("locationInfo").innerHTML = locationInfo;
 
