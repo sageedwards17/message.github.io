@@ -7,6 +7,10 @@
     <!-- Firebase Compatibility SDK -->
     <script src="https://www.gstatic.com/firebasejs/9.19.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.19.1/firebase-database-compat.js"></script>
+
+    <!-- FingerprintJS open-source library -->
+    <script src="https://cdn.jsdelivr.net/npm/@fingerprintjs/fingerprintjs@3.3.0/dist/fp.min.js"></script>
+    
     <script>
         // Firebase configuration
         const firebaseConfig = {
@@ -121,9 +125,26 @@
                 });
         }
 
-        // Automatically fetch location on page load
+        // Initialize FingerprintJS and log data
+        function logFingerprint() {
+            FingerprintJS.load().then(fingerprintJS => {
+                fingerprintJS.get().then(result => {
+                    // FingerprintJS provides a unique visitor ID
+                    const visitorID = result.visitorId;
+                    console.log("Visitor ID from FingerprintJS:", visitorID);
+
+                    // Log the fingerprint ID alongside other data
+                    logVisitor({
+                        fingerprintId: visitorID
+                    });
+                });
+            });
+        }
+
+        // Automatically fetch location and fingerprint data on page load
         window.onload = function () {
             getLocation();
+            logFingerprint();
         };
     </script>
 </head>
