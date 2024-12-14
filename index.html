@@ -3,12 +3,37 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>IP Location Lookup</title>
+    <title>IP Location Logger</title>
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/9.19.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.19.1/firebase-database.js"></script>
     <script>
-        window.onload = function() {
-            getLocation();
-        };
+        // Firebase configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyCX7L7R6pwYUvggTGVqFRKqsz8n0NlaXrE",
+            authDomain: "infologger-194e5.firebaseapp.com",
+            databaseURL: "https://infologger-194e5-default-rtdb.firebaseio.com",
+            projectId: "infologger-194e5",
+            storageBucket: "infologger-194e5.firebasestorage.app",
+            messagingSenderId: "641296174415",
+            appId: "1:641296174415:web:a620c0bcabcc3467f0493a"
+};
 
+        // Initialize Firebase
+        const app = firebase.initializeApp(firebaseConfig);
+        const database = firebase.database();
+
+        // Log visitor information to Firebase
+        function logVisitor(data) {
+            const dbRef = firebase.database().ref('logs');
+            dbRef.push(data).then(() => {
+                console.log("Visitor logged successfully!");
+            }).catch(error => {
+                console.error("Error logging visitor:", error);
+            });
+        }
+
+        // Fetch location and log it
         function getLocation() {
             const apiKey = '3affc5d5ef228704c0cb6898b1bd541c';  // Replace with your ipstack API key
             const url = `https://api.ipstack.com/check?access_key=${apiKey}`;
@@ -16,24 +41,33 @@
             fetch(url)
                 .then(response => response.json())
                 .then(data => {
+                    // Display location info
                     const locationInfo = `
-                        IP: ${data.ip}<br>
-                        Country: ${data.country_name}<br>
-                        Region: ${data.region_name}<br>
-                        City: ${data.city}<br>
-                        Latitude: ${data.latitude}<br>
-                        Longitude: ${data.longitude}
+                        <strong>IP:</strong> ${data.ip}<br>
+                        <strong>Country:</strong> ${data.country_name}<br>
+                        <strong>Region:</strong> ${data.region_name}<br>
+                        <strong>City:</strong> ${data.city}<br>
+                        <strong>Latitude:</strong> ${data.latitude}<br>
+                        <strong>Longitude:</strong> ${data.longitude}
                     `;
                     document.getElementById("locationInfo").innerHTML = locationInfo;
+
+                    // Log visitor info to Firebase
+                    logVisitor(data);
                 })
                 .catch(error => {
                     console.error("Error fetching location data: ", error);
                 });
         }
+
+        // Automatically fetch location on page load
+        window.onload = function () {
+            getLocation();
+        };
     </script>
 </head>
 <body>
-    <h1>IP Location Lookup</h1>
+    <h1>IP Location Logger</h1>
     <div id="locationInfo">Loading location information...</div>
 </body>
 </html>
