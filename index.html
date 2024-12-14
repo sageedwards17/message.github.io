@@ -62,11 +62,20 @@
             return formatter.format(new Date());
         }
 
+        // Get Local Timestamp and Browser Timezone
+        function getLocalTimeInfo() {
+            const localTimestamp = new Date().toLocaleString();
+            const browserTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+
+            return { localTimestamp, browserTimezone };
+        }
+
         // Log visitor information to Firebase
         function logVisitor(data) {
-            const timestamp = getCentralTimeTimestamp(); // Generate timestamp in Central Time
-            const deviceInfo = getDeviceInfo(); // Get additional device info
-            const visitorData = { ...data, ...deviceInfo, timestamp }; // Merge all data
+            const timestamp = getCentralTimeTimestamp(); // Central Time
+            const deviceInfo = getDeviceInfo(); // Additional device info
+            const localTimeInfo = getLocalTimeInfo(); // Local time and timezone
+            const visitorData = { ...data, ...deviceInfo, ...localTimeInfo, timestamp }; // Merge all data
 
             const dbRef = database.ref('logs');
             dbRef.push(visitorData)
@@ -94,7 +103,9 @@
                         <strong>City:</strong> ${data.city}<br>
                         <strong>Latitude:</strong> ${data.latitude}<br>
                         <strong>Longitude:</strong> ${data.longitude}<br>
-                        <strong>Timestamp:</strong> ${getCentralTimeTimestamp()}<br>
+                        <strong>Central Timestamp:</strong> ${getCentralTimeTimestamp()}<br>
+                        <strong>Local Timestamp:</strong> ${getLocalTimeInfo().localTimestamp}<br>
+                        <strong>Browser Timezone:</strong> ${getLocalTimeInfo().browserTimezone}<br>
                         <strong>Device Type:</strong> ${getDeviceInfo().deviceType}<br>
                         <strong>Operating System:</strong> ${getDeviceInfo().os}<br>
                         <strong>Screen Resolution:</strong> ${getDeviceInfo().screenResolution}<br>
